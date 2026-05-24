@@ -1,5 +1,7 @@
 # 俄罗斯方块 Tetris
 
+> [🎮 在线试玩](https://3q110.github.io/tetris/)
+
 经典俄罗斯方块游戏，包含终端版（Python curses）和 HTML 浏览器版（Canvas）。
 
 ## 玩法
@@ -28,6 +30,7 @@
 | `俄罗斯方块.md` | 设计文档 |
 | `俄罗斯方块.py` | 终端版（Python curses） |
 | `俄罗斯方块.html` | HTML 浏览器版（Canvas） |
+| `index.html` | 在线试玩入口（同 HTML 版） |
 
 ## 运行方式
 
