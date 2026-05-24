@@ -12,6 +12,7 @@ Hermes 升级版俄罗斯方块 - 终端版
   ← 方向键: 方块左移
   → 方向键: 方块右移
   ↓ 方向键: 加速下落
+  W 键:    一键落底
 """
 
 import curses
@@ -33,9 +34,6 @@ SHAPES = [
     [[0, 1, 1], [1, 1, 0]],                  # S
     [[1, 1, 0], [0, 1, 1]],                  # Z
 ]
-
-# 方块配色 (curses 颜色索引 1-7)
-COLOR_PAIRS = [1, 2, 3, 4, 5, 6, 7]
 
 # ==================== 游戏类 ====================
 class TetrisGame:
@@ -79,13 +77,13 @@ class TetrisGame:
             self.game_over = True
 
     def collision(self, x, y):
-        """方块碰撞边界检测"""
+        """方块碰撞边界检测（修复：添加顶部边界检查）"""
         for r in range(len(self.current_shape)):
             for c in range(len(self.current_shape[r])):
                 if self.current_shape[r][c]:
                     nx = x + c
                     ny = y + r
-                    if nx < 0 or nx >= COL or ny >= ROW:
+                    if nx < 0 or nx >= COL or ny < 0 or ny >= ROW:
                         return True
                     if ny >= 0 and self.board[ny][nx]:
                         return True
@@ -157,7 +155,7 @@ class TetrisGame:
             self.reset_piece()
 
     def hard_drop(self):
-        """直接落底（可选功能）"""
+        """直接落底（按 W 键触发）"""
         while not self.collision(self.current_x, self.current_y + 1):
             self.current_y += 1
         self.merge()
@@ -178,15 +176,15 @@ class TetrisGame:
 
 # ==================== 绘制函数 ====================
 def draw_board(win, game):
-    """绘制游戏棋盘"""
-    # 绘制棋盘背景
+    """绘制游戏棋盘（修复左边框被方块覆盖问题）"""
+    # 绘制棋盘背景（偏移一列，避免覆盖左边框）
     for r in range(ROW):
         for c in range(COL):
             color = game.board[r][c]
             if color:
-                win.addch(r, c * 2, '█', curses.color_pair(color))
+                win.addch(r, c * 2 + 1, '█', curses.color_pair(color))
             else:
-                win.addch(r, c * 2, ' ', curses.color_pair(0))
+                win.addch(r, c * 2 + 1, ' ', curses.color_pair(0))
 
     # 绘制当前方块
     if game.current_shape and not game.game_over:
@@ -194,7 +192,7 @@ def draw_board(win, game):
             for c in range(len(game.current_shape[r])):
                 if game.current_shape[r][c]:
                     y = game.current_y + r
-                    x = (game.current_x + c) * 2
+                    x = (game.current_x + c) * 2 + 1
                     if 0 <= y < ROW:
                         win.addch(y, x, '█', curses.color_pair(game.current_color))
 
@@ -224,7 +222,7 @@ def draw_status(win, game, height, width):
         # 开始提示
         msg = "按空格开始游戏"
         win.addstr(mid_y, (width - len(msg) * 2) // 2, msg, curses.color_pair(7) | curses.A_BOLD)
-        win.addstr(mid_y + 2, (width - 20) // 2, "↑ 旋转  ←→ 移动  ↓ 加速", curses.color_pair(6))
+        win.addstr(mid_y + 2, (width - 28) // 2, "↑ 旋转  ←→ 移动  ↓ 加速  W 落底", curses.color_pair(6))
         win.addstr(mid_y + 4, (width - 20) // 2, "空格 暂停/继续", curses.color_pair(6))
     elif game.is_pause:
         # 暂停提示
@@ -241,20 +239,21 @@ def draw_status(win, game, height, width):
         win.addstr(mid_y + 3, (width - len(msg3) * 2) // 2, msg3, curses.color_pair(3) | curses.A_BOLD)
 
 def draw_border(win, game):
-    """绘制棋盘边框"""
+    """绘制棋盘边框（适配偏移后的棋盘）"""
+    right = COL * 2 + 1
     # 左侧边框
     for r in range(ROW + 1):
         win.addch(r, 0, '│', curses.color_pair(7))
-        win.addch(r, COL * 2, '│', curses.color_pair(7))
+        win.addch(r, right, '│', curses.color_pair(7))
     # 上下边框
-    for c in range(COL * 2 + 1):
+    for c in range(right + 1):
         win.addch(0, c, '─', curses.color_pair(7))
         win.addch(ROW, c, '─', curses.color_pair(7))
     # 四角
     win.addch(0, 0, '┌', curses.color_pair(7))
-    win.addch(0, COL * 2, '┐', curses.color_pair(7))
+    win.addch(0, right, '┐', curses.color_pair(7))
     win.addch(ROW, 0, '└', curses.color_pair(7))
-    win.addch(ROW, COL * 2, '┘', curses.color_pair(7))
+    win.addch(ROW, right, '┘', curses.color_pair(7))
 
 # ==================== 主游戏循环 ====================
 def main(stdscr):
@@ -337,6 +336,9 @@ def main(stdscr):
             game.rotate()
         elif key == curses.KEY_DOWN:
             game.drop()
+        # 修复：绑定 W 键到 hard_drop
+        elif key == ord('w') or key == ord('W'):
+            game.hard_drop()
 
         # 自动下落
         current_time = time.time()
@@ -354,6 +356,7 @@ if __name__ == "__main__":
     print("  ← 方向键: 方块左移")
     print("  → 方向键: 方块右移")
     print("  ↓ 方向键: 加速下落")
+    print("  W 键:     一键落底")
     print("=" * 30)
     print("按 Enter 开始游戏...")
     input()
