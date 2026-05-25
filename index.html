@@ -224,6 +224,160 @@
     color: #0ff;
     border-color: #0ff;
   }
+
+  /* ==================== 移动端触控按钮 ==================== */
+  .touch-controls {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    padding: 8px 12px 16px;
+    background: linear-gradient(to top, rgba(10,10,26,0.95) 60%, transparent);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  .touch-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .touch-row.top-row {
+    margin-bottom: 6px;
+  }
+
+  .touch-btn {
+    width: 64px;
+    height: 56px;
+    border-radius: 14px;
+    border: 2px solid rgba(0,255,255,0.3);
+    background: rgba(0,20,40,0.85);
+    color: #0ff;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(0,255,255,0.1);
+  }
+
+  .touch-btn:active, .touch-btn.pressed {
+    background: rgba(0,150,255,0.35);
+    border-color: #0ff;
+    transform: scale(0.92);
+    box-shadow: 0 0 20px rgba(0,255,255,0.3);
+  }
+
+  .touch-btn.wide {
+    width: 140px;
+    font-size: 14px;
+    letter-spacing: 2px;
+    font-weight: bold;
+  }
+
+  .touch-btn.drop-btn {
+    border-color: rgba(255,136,0,0.4);
+    color: #ff8800;
+  }
+  .touch-btn.drop-btn:active, .touch-btn.drop-btn.pressed {
+    border-color: #ff8800;
+    background: rgba(255,136,0,0.3);
+    box-shadow: 0 0 20px rgba(255,136,0,0.3);
+  }
+
+  .touch-btn.pause-btn {
+    width: 56px;
+    height: 44px;
+    font-size: 16px;
+    margin-left: auto;
+  }
+
+  /* ==================== 移动端响应式布局 ==================== */
+  @media (max-width: 700px), (max-height: 700px) and (orientation: landscape) {
+    body {
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 4px;
+      padding-bottom: 160px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .game-container {
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transform: scale(0.85);
+      transform-origin: top center;
+    }
+
+    .panel {
+      flex-direction: row;
+      flex-wrap: wrap;
+      width: auto;
+      max-width: 300px;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .title, .subtitle {
+      width: 100%;
+      font-size: 16px !important;
+    }
+    .subtitle {
+      font-size: 9px !important;
+    }
+
+    .panel-box {
+      padding: 6px 10px;
+      flex: 0 0 auto;
+    }
+
+    .score-val { font-size: 22px !important; }
+    .level-val { font-size: 18px !important; }
+    .lines-val { font-size: 18px !important; }
+    .highscore-val { font-size: 18px !important; }
+
+    #preview-canvas {
+      width: 60px !important;
+      height: 60px !important;
+    }
+
+    .controls {
+      display: none;
+    }
+
+    .touch-controls {
+      display: block;
+    }
+
+    canvas#game-canvas {
+      width: 260px;
+      height: 520px;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .game-container {
+      transform: scale(0.75);
+    }
+    .touch-btn {
+      width: 56px;
+      height: 50px;
+      font-size: 20px;
+    }
+    .touch-btn.wide {
+      width: 120px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -270,6 +424,20 @@
       <kbd>W</kbd> 一键落底<br>
       <kbd>空格</kbd> 暂停/继续<br>
     </div>
+  </div>
+</div>
+
+<!-- 移动端触控按钮 -->
+<div class="touch-controls" id="touch-controls">
+  <div class="touch-row top-row">
+    <button class="touch-btn" id="btn-rotate" aria-label="旋转">⟳</button>
+    <button class="touch-btn drop-btn wide" id="btn-drop" aria-label="一键落底">落底</button>
+    <button class="touch-btn pause-btn" id="btn-pause" aria-label="暂停">❚❚</button>
+  </div>
+  <div class="touch-row bottom-row">
+    <button class="touch-btn" id="btn-left" aria-label="左移">◀</button>
+    <button class="touch-btn" id="btn-down" aria-label="加速">▼</button>
+    <button class="touch-btn" id="btn-right" aria-label="右移">▶</button>
   </div>
 </div>
 
@@ -1038,6 +1206,141 @@ document.addEventListener('keyup', (e) => {
     dasDirection = null;
   }
 });
+
+// ==================== 手机触控控制 ====================
+
+// 检测是否为触屏设备
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+// 触控按钮：防抖 + 长按重复
+function setupTouchButton(btnId, action, holdInterval) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  let holdTimer = null;
+
+  const trigger = () => {
+    initAudio();
+    if (!isStart && !gameOver) {
+      isStart = true;
+      lastDropTime = performance.now();
+      sfxStart();
+      return;
+    }
+    if (gameOver) { resetGame(); return; }
+    action();
+  };
+
+  const startHold = (e) => {
+    e.preventDefault();
+    btn.classList.add('pressed');
+    trigger();
+    if (holdInterval) {
+      holdTimer = setInterval(() => {
+        if (!isStart || isPause || gameOver) { clearInterval(holdTimer); return; }
+        action();
+      }, holdInterval);
+    }
+  };
+
+  const endHold = (e) => {
+    e.preventDefault();
+    btn.classList.remove('pressed');
+    if (holdTimer) { clearInterval(holdTimer); holdTimer = null; }
+  };
+
+  btn.addEventListener('touchstart', startHold, { passive: false });
+  btn.addEventListener('touchend', endHold, { passive: false });
+  btn.addEventListener('touchcancel', endHold, { passive: false });
+  // 也支持鼠标点击（桌面调试）
+  btn.addEventListener('mousedown', (e) => { e.preventDefault(); startHold(e); });
+  btn.addEventListener('mouseup', (e) => { e.preventDefault(); endHold(e); });
+  btn.addEventListener('mouseleave', (e) => { e.preventDefault(); endHold(e); });
+}
+
+// 绑定触控按钮
+setupTouchButton('btn-left', moveLeft, 100);
+setupTouchButton('btn-right', moveRight, 100);
+setupTouchButton('btn-down', () => { softDrop(); lastDropTime = performance.now(); }, 80);
+setupTouchButton('btn-rotate', rotate);
+setupTouchButton('btn-drop', hardDrop);
+
+// 暂停按钮
+(function() {
+  const btn = document.getElementById('btn-pause');
+  if (!btn) return;
+  const togglePause = (e) => {
+    e.preventDefault();
+    initAudio();
+    if (gameOver) { resetGame(); return; }
+    if (!isStart) { isStart = true; lastDropTime = performance.now(); sfxStart(); return; }
+    isPause = !isPause;
+    btn.textContent = isPause ? '▶' : '❚❚';
+    if (!isPause) lastDropTime = performance.now();
+  };
+  btn.addEventListener('touchstart', togglePause, { passive: false });
+  btn.addEventListener('click', (e) => { e.preventDefault(); togglePause(e); });
+})();
+
+// Canvas 滑动手势
+(function() {
+  let touchStartX = 0, touchStartY = 0;
+  let touchStartTime = 0;
+  let touchMoved = false;
+
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    initAudio();
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    touchStartTime = performance.now();
+    touchMoved = false;
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (!isStart || isPause || gameOver) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+    const threshold = 20;
+
+    if (Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 0) moveRight(); else moveLeft();
+      touchStartX = t.clientX;
+      touchMoved = true;
+    } else if (dy > threshold && Math.abs(dy) > Math.abs(dx)) {
+      softDrop();
+      lastDropTime = performance.now();
+      touchStartY = t.clientY;
+      touchMoved = true;
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    if (!isStart || isPause || gameOver) return;
+    const elapsed = performance.now() - touchStartTime;
+    const t = e.changedTouches[0];
+    const dy = t.clientY - touchStartY;
+    const dx = t.clientX - touchStartX;
+
+    // 短促上滑 = 旋转
+    if (!touchMoved && Math.abs(dy) > 20 && dy < 0 && elapsed < 300) {
+      rotate();
+    }
+    // 双指 = 一键落底（通过检测同时触摸数量）
+  }, { passive: false });
+
+  // 双指触控 = 一键落底
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length >= 2) {
+      e.preventDefault();
+      initAudio();
+      hardDrop();
+    }
+  }, { passive: false });
+})();
 
 // ==================== 游戏控制 ====================
 function resetGame() {
