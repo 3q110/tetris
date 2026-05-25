@@ -277,15 +277,11 @@
 
   /* 旋转键 - 最大 */
   .touch-btn.rotate-btn {
-    width: 82px;
-    height: 72px;
-    font-size: 28px;
-    border-color: rgba(0,255,255,0.5);
-    background: rgba(0,30,60,0.9);
+    /* same size as directional buttons */
   }
   .touch-btn.rotate-btn:active, .touch-btn.rotate-btn.pressed {
-    background: rgba(0,200,255,0.4);
-    box-shadow: 0 0 25px rgba(0,255,255,0.4);
+    background: rgba(0,150,255,0.35);
+    box-shadow: 0 0 20px rgba(0,255,255,0.3);
   }
 
   .touch-btn.drop-btn {
@@ -299,10 +295,7 @@
   }
 
   .touch-btn.pause-btn {
-    width: 56px;
-    height: 44px;
-    font-size: 16px;
-    margin-left: auto;
+    /* same size as directional buttons */
   }
 
   /* ==================== 移动端响应式布局 ==================== */
@@ -381,9 +374,7 @@
       font-size: 22px;
     }
     .touch-btn.rotate-btn {
-      width: 74px;
-      height: 65px;
-      font-size: 26px;
+      /* same size as directional buttons */
     }
   }
 </style>
@@ -438,9 +429,9 @@
 <!-- 移动端触控按钮 -->
 <div class="touch-controls" id="touch-controls">
   <div class="touch-row top-row">
-    <button class="touch-btn rotate-btn" id="btn-rotate" aria-label="旋转">⟳</button>
     <button class="touch-btn drop-btn" id="btn-drop" aria-label="一键落底">落底</button>
     <button class="touch-btn pause-btn" id="btn-pause" aria-label="暂停">❚❚</button>
+    <button class="touch-btn rotate-btn" id="btn-rotate" aria-label="旋转">⟳</button>
   </div>
   <div class="touch-row bottom-row">
     <button class="touch-btn" id="btn-left" aria-label="左移">◀</button>
