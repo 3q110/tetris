@@ -233,7 +233,7 @@
     left: 0;
     right: 0;
     z-index: 200;
-    padding: 8px 12px 16px;
+    padding: 10px 16px 18px;
     background: linear-gradient(to top, rgba(10,10,26,0.95) 60%, transparent);
     user-select: none;
     -webkit-user-select: none;
@@ -244,21 +244,21 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 16px;
   }
 
   .touch-row.top-row {
-    margin-bottom: 6px;
+    margin-bottom: 10px;
   }
 
   .touch-btn {
-    width: 64px;
-    height: 56px;
-    border-radius: 14px;
+    width: 70px;
+    height: 62px;
+    border-radius: 16px;
     border: 2px solid rgba(0,255,255,0.3);
     background: rgba(0,20,40,0.85);
     color: #0ff;
-    font-size: 22px;
+    font-size: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -275,11 +275,17 @@
     box-shadow: 0 0 20px rgba(0,255,255,0.3);
   }
 
-  .touch-btn.wide {
-    width: 140px;
-    font-size: 14px;
-    letter-spacing: 2px;
-    font-weight: bold;
+  /* 旋转键 - 最大 */
+  .touch-btn.rotate-btn {
+    width: 82px;
+    height: 72px;
+    font-size: 28px;
+    border-color: rgba(0,255,255,0.5);
+    background: rgba(0,30,60,0.9);
+  }
+  .touch-btn.rotate-btn:active, .touch-btn.rotate-btn.pressed {
+    background: rgba(0,200,255,0.4);
+    box-shadow: 0 0 25px rgba(0,255,255,0.4);
   }
 
   .touch-btn.drop-btn {
@@ -306,7 +312,7 @@
       align-items: center;
       justify-content: flex-start;
       padding-top: 4px;
-      padding-bottom: 160px;
+      padding-bottom: 180px;
       overflow-y: auto;
       overflow-x: hidden;
     }
@@ -370,12 +376,14 @@
       transform: scale(0.75);
     }
     .touch-btn {
-      width: 56px;
-      height: 50px;
-      font-size: 20px;
+      width: 63px;
+      height: 56px;
+      font-size: 22px;
     }
-    .touch-btn.wide {
-      width: 120px;
+    .touch-btn.rotate-btn {
+      width: 74px;
+      height: 65px;
+      font-size: 26px;
     }
   }
 </style>
@@ -430,8 +438,8 @@
 <!-- 移动端触控按钮 -->
 <div class="touch-controls" id="touch-controls">
   <div class="touch-row top-row">
-    <button class="touch-btn" id="btn-rotate" aria-label="旋转">⟳</button>
-    <button class="touch-btn drop-btn wide" id="btn-drop" aria-label="一键落底">落底</button>
+    <button class="touch-btn rotate-btn" id="btn-rotate" aria-label="旋转">⟳</button>
+    <button class="touch-btn drop-btn" id="btn-drop" aria-label="一键落底">落底</button>
     <button class="touch-btn pause-btn" id="btn-pause" aria-label="暂停">❚❚</button>
   </div>
   <div class="touch-row bottom-row">
